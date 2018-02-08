@@ -1,6 +1,7 @@
 var fs = require('fs');
 var path = require('path');
 var _ = require('underscore');
+var request = require('request');
 
 /*
  * You will need to reuse the same paths many times over in the course of this sprint.
@@ -26,16 +27,57 @@ exports.initialize = function(pathsObj) {
 // modularize your code. Keep it clean!
 
 exports.readListOfUrls = function(callback) {
+  //  a list of to be URLS
+  // pass in  fs.readfile(path, (err, data) =>)
+  // creates array
+  fs.readFile(exports.paths.list, (err, data)=> {
+    // urls = data.toString().split('\n');
+    urls = `${data}`.split('\n');
+    callback(err, urls);
+    
+  });
 };
 
 exports.isUrlInList = function(url, callback) {
+  // checks entire list for URL
+  exports.readListOfUrls((err, urls) => {
+    let exists = urls.includes(url);
+    callback(err, exists);
+  });
 };
 
 exports.addUrlToList = function(url, callback) {
+  // adds URL to to be list for worker to add later - sites.text
+  exports.isUrlInList(url, (err, exists)=> {
+    if (!exists) {
+      fs.writeFile(exports.paths.list, url, (err) => {
+        callback(err, exists);
+      });
+    }
+  });
 };
 
 exports.isUrlArchived = function(url, callback) {
+  // checks to see if URL is in archived list - sites folder
+  fs.readdir(exports.paths.archivedSites, (err, files) => {
+    var exists = false;
+    for (var i = 0; i < files.length; i++) {
+      if (files[i] === url) {
+        exists = true;
+      }
+    }
+    callback(err, exists);
+  });
 };
 
 exports.downloadUrls = function(urls) {
+  // pulls information from the internet to archived list
+  // add to sites
+  // remove from sites.text
+  // urls.forEach((url) => {
+  for (let url of urls) {
+    request(`http://${url}`, (err, response, body) => {
+      fs.writeFile(exports.paths.archivedSites + '/' + url, body); 
+    });
+  }
 };
