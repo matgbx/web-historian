@@ -50,7 +50,7 @@ exports.addUrlToList = function(url, callback) {
   // adds URL to to be list for worker to add later - sites.text
   exports.isUrlInList(url, (err, exists)=> {
     if (!exists) {
-      fs.writeFile(exports.paths.list, url, (err) => {
+      fs.appendFile(exports.paths.list, url + '\n', (err) => {
         callback(err, exists);
       });
     }
@@ -60,6 +60,7 @@ exports.addUrlToList = function(url, callback) {
 exports.isUrlArchived = function(url, callback) {
   // checks to see if URL is in archived list - sites folder
   fs.readdir(exports.paths.archivedSites, (err, files) => {
+    console.log('files', files);
     var exists = false;
     for (var i = 0; i < files.length; i++) {
       if (files[i] === url) {
@@ -70,13 +71,26 @@ exports.isUrlArchived = function(url, callback) {
   });
 };
 
-exports.downloadUrls = function(urls) {
+exports.downloadUrls = function(urls, callback) {
   // pulls information from the internet to archived list
   // add to sites
   // remove from sites.text
   // urls.forEach((url) => {
   for (let url of urls) {
+    if ( url === 'ALL DONE') {
+      var array = [];
+      urls.pop();
+      urls.filter(url => { 
+        return exports.isUrlArchived(url, (err, exists) => {
+          if (!exists) {
+            array.push(url);
+          }
+        });
+      });
+      callback(array);
+    }
     request(`http://${url}`, (err, response, body) => {
+      console.log('writing file to ', url);
       fs.writeFile(exports.paths.archivedSites + '/' + url, body); 
     });
   }
