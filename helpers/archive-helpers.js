@@ -60,7 +60,6 @@ exports.addUrlToList = function(url, callback) {
 exports.isUrlArchived = function(url, callback) {
   // checks to see if URL is in archived list - sites folder
   fs.readdir(exports.paths.archivedSites, (err, files) => {
-    console.log('files', files);
     var exists = false;
     for (var i = 0; i < files.length; i++) {
       if (files[i] === url) {
@@ -88,10 +87,11 @@ exports.downloadUrls = function(urls, callback) {
         });
       });
       callback(array);
+    } else {
+      request(`http://${url}`, (err, response, body) => {
+        console.log('writing file to ', url);
+        fs.writeFile(exports.paths.archivedSites + '/' + url, body); 
+      });
     }
-    request(`http://${url}`, (err, response, body) => {
-      console.log('writing file to ', url);
-      fs.writeFile(exports.paths.archivedSites + '/' + url, body); 
-    });
   }
 };
